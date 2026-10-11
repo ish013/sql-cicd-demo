@@ -1,0 +1,65 @@
+name: Build and Deploy SQL Database (GitHub-only demo)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'SqlProject/**'
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "DemoPass123!"
+          MSSQL_PID: "Developer"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P DemoPass123! -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build SQL project (generate DACPAC)
+        run: dotnet build SqlProject/SqlProject.sqlproj --configuration Release --output ./build
+
+      - name: Upload DACPAC as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dacpac
+          path: ./build/SqlProject.dacpac
+
+      - name: Install sqlpackage
+        run: dotnet tool install -g microsoft.sqlpackage
+
+      - name: Deploy DACPAC to database
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          sqlpackage /Action:Publish \
+            /SourceFile:"./build/SqlProject.dacpac" \
+            /TargetServerName:"localhost,1433" \
+            /TargetDatabaseName:"DemoDb" \
+            /TargetUser:"sa" \
+            /TargetPassword:"DemoPass123!" \
+            /TargetEncryptConnection:False
+
+      - name: Verify schema changes
+        run: |
+          sudo apt-get update && sudo apt-get install -y mssql-tools18 unixodbc-dev 2>/dev/null || true
+          /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "DemoPass123!" -d DemoDb \
+            -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' ORDER BY TABLE_NAME;"
