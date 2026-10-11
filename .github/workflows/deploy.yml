@@ -1,0 +1,45 @@
+name: Build and Deploy SQL Database
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'SqlProject/**'
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # ---- BUILD: compiles the .sqlproj into a .dacpac ----
+      - name: Build SQL project (generate DACPAC)
+        run: dotnet build SqlProject/SqlProject.sqlproj --configuration Release --output ./build
+
+      - name: Upload DACPAC as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dacpac
+          path: ./build/SqlProject.dacpac
+
+      # ---- DEPLOY: publishes the DACPAC to Azure SQL ----
+      - name: Deploy DACPAC to Azure SQL Database
+        uses: azure/sql-action@v2.3
+        with:
+          connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+          path: ./build/SqlProject.dacpac
+          action: publish
+
+      # ---- VERIFY: simple post-deploy sanity check ----
+      - name: Verify schema changes
+        run: |
+          echo "Deployment finished. Check the Azure Portal / sqlcmd to confirm the schema:"
+          echo "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo';"

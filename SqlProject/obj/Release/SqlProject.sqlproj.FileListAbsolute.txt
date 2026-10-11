@@ -1,0 +1,11 @@
+C:\Users\Admin\Downloads\sql-cicd-demo\build\SqlProject.dacpac
+C:\Users\Admin\Downloads\sql-cicd-demo\build\SqlProject.dll
+C:\Users\Admin\Downloads\sql-cicd-demo\build\SqlProject.pdb
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\SqlProject.sqlproj.AssemblyReference.cache
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\SqlProject.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\Model.xml
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\refactor.xml
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\postdeploy.sql
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\predeploy.sql
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\SqlProject.dll
+C:\Users\Admin\Downloads\sql-cicd-demo\SqlProject\obj\Release\SqlProject.pdb
